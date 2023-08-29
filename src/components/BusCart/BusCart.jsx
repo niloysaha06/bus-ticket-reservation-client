@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const BusCart = ({ item }) => {
   const { _id, name, time } = item;
   return (
@@ -6,10 +8,11 @@ const BusCart = ({ item }) => {
         <h2 className="card-title">{name}</h2>
         {/* <p>{route}</p> */}
         <p className="">{time}</p>
-
-        <div className="card-actions justify-end">
-          <button className="btn btn-primary">View</button>
-        </div>
+        <Link to={`/busview/${_id}`}>
+          <div className="card-actions justify-end">
+            <button className="btn btn-primary">View</button>
+          </div>
+        </Link>
       </div>
     </div>
   );
