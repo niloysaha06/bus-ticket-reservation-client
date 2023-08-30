@@ -20,7 +20,10 @@ const Home = () => {
   console.log(busesData);
 
   return (
-    <div>
+    <div className="mt-16">
+      <div className="text-center mb-4">
+        <h1 className="font-medium text-2xl">Bus Ticket Reservation System </h1>
+      </div>
       <BusList items={busesData} />
     </div>
   );
