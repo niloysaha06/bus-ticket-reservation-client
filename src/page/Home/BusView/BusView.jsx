@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import "./BusView.css";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const BusView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [busData, setBusData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [seatNumber, setSeatnumber] = useState([]);
 
   const allSeats = [
     "1A",
@@ -56,6 +58,32 @@ const BusView = () => {
     "12A",
   ];
 
+  //form submit
+  const handleConfirmSubmit = async (e) => {
+    e.preventDefault();
+    const form = event.target;
+    const name = form.name.value;
+    const email = form.email.value;
+    const phone = form.phone.value;
+    const gender = form.gender.value;
+    const busId = busData._id;
+
+    try {
+      const res = await axios.post("http://localhost:3000/book-ticket", {
+        busId,
+        name,
+        email,
+        phone,
+        gender,
+        seatNumber,
+      });
+      navigate("/thankyou");
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const getSingleBusData = async () => {
     try {
       const { data } = await axios.get(`http://localhost:3000/bus/${id}`);
@@ -74,14 +102,17 @@ const BusView = () => {
     <div className="mt-12">
       <div className="text-center mb-4">
         <h1 className="font-medium text-2xl">{busData?.name}</h1>
-        <p className="text-lg font-normal my-2">Route : Dhaka - Cox Bazar</p>
+        <p className="text-lg font-normal my-2">Route : Dhaka - Cox's Bazar</p>
         <p className="text-lg">Departure : {busData?.time}</p>
       </div>
       <hr />
       <div>
         <div>
           <div className="plane">
-            <form className="grid md:grid-cols-2 gap-10">
+            <form
+              onSubmit={handleConfirmSubmit}
+              className="grid md:grid-cols-2 gap-10"
+            >
               <ol className="cabin fuselage">
                 <li className="">
                   <ol className="seats grid md:grid-cols-4 gap-2" type="A">
@@ -92,6 +123,7 @@ const BusView = () => {
                             type="checkbox"
                             value={seatNumber}
                             id={seatNumber}
+                            onChange={(e) => setSeatnumber(e.target.value)}
                           />
                           <label htmlFor={seatNumber}>{seatNumber}</label>
                         </li>
