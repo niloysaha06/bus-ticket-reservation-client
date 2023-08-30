@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaMale } from "react-icons/fa";
 import { FaFemale } from "react-icons/fa";
+
 const BusView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -70,18 +71,36 @@ const BusView = () => {
     const phone = form.phone.value;
     const gender = form.gender.value;
     const busId = busData._id;
+    let canBookSeat = true;
 
     try {
-      const res = await axios.post("http://localhost:3000/book-ticket", {
-        busId,
-        name,
-        email,
-        phone,
-        gender,
-        seatNumber,
-      });
-      navigate("/thankyou");
-      console.log(res);
+      if (seatNumber !== "12A" && gender === "Male") {
+        const nextSeatNumber = getNextSeatNumber(seatNumber);
+        if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
+          const checkReservedSeatGender =
+            getGenderNameForReservedSeat(nextSeatNumber);
+          if (checkReservedSeatGender && checkReservedSeatGender === "Female") {
+            canBookSeat = false;
+          }
+        }
+      }
+      if (canBookSeat) {
+        const res = await axios.post("http://localhost:3000/book-ticket", {
+          busId,
+          name,
+          email,
+          phone,
+          gender,
+          seatNumber,
+        });
+        if (res) {
+          navigate("/thankyou");
+        }
+      } else {
+        alert(
+          `You cannot reserve this seat ${seatNumber}. Because that seat is reserved by a Female`
+        );
+      }
     } catch (error) {
       console.log(error);
     }
@@ -106,6 +125,41 @@ const BusView = () => {
   };
 
   const isSeatReserved = (seatNumber) => reservedSeats.includes(seatNumber);
+  const getGenderNameForReservedSeat = (seatNumber) => {
+    const ticket = ticketBookings.find(
+      (ticket) => ticket.seatNumber === seatNumber
+    );
+    if (ticket) {
+      return ticket.gender;
+    } else {
+      return "";
+    }
+  };
+
+  const extractLetter = (inputString) => {
+    const letter = inputString.match(/[a-zA-Z]+/);
+    return letter ? letter[0] : null;
+  };
+
+  const extractNumber = (inputString) => {
+    const number = inputString.match(/\d+/);
+    return number ? number[0] : null;
+  };
+
+  const getNextSeatNumber = (currentSeatNumber) => {
+    const letter = extractLetter(currentSeatNumber);
+    const number = extractNumber(currentSeatNumber);
+    if (letter === "A") {
+      return number + "B";
+    } else if (letter === "B") {
+      return number + "A";
+    } else if (letter === "C") {
+      return number + "D";
+    } else if (letter === "D") {
+      return number + "C";
+    }
+    return "";
+  };
 
   useEffect(() => {
     getSingleBusData();
