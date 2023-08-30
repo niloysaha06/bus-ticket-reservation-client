@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import "./BusView.css";
-import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-
+import axios from "axios";
 const BusView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [busData, setBusData] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [seatNumber, setSeatnumber] = useState([]);
-
+  const [ticketBookings, setTicketBookings] = useState([]);
+  const [ticketData, setTicketData] = useState([]);
+  const [reservedSeats, setReservedSeats] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const allSeats = [
     "1A",
     "1B",
@@ -58,6 +59,11 @@ const BusView = () => {
     "12A",
   ];
 
+  // console.log(seatNumber);
+  // console.log(ticketBookings);
+  // console.log(ticketData);
+  // console.log(reservedSeat);
+
   //form submit
   const handleConfirmSubmit = async (e) => {
     e.preventDefault();
@@ -88,21 +94,37 @@ const BusView = () => {
     try {
       const { data } = await axios.get(`http://localhost:3000/bus/${id}`);
       setBusData(data?.bus);
+      setTicketBookings(data?.ticketBookings);
+      ticketBookings.map((ticket, index) => {
+        setTicketData(ticket);
+        setReservedSeats((reservedSeats[index] = ticket.seatNumber));
+      });
+
+      ticketBookings.forEach((ticket, index) => {
+        setTicketData(ticket);
+        setReservedSeats((prevReservedSeats) => {
+          const updatedReservedSeats = [...prevReservedSeats];
+          updatedReservedSeats[index] = ticket.seatNumber;
+          return updatedReservedSeats;
+        });
+      });
       setIsLoading(false);
     } catch (error) {
       console.log(error);
     }
   };
 
+  const isSeatReserved = (seatNumber) => reservedSeats.includes(seatNumber);
+
   useEffect(() => {
     getSingleBusData();
-  }, []);
+  }, [isLoading]);
 
   return (
     <div className="mt-12">
       <div className="text-center mb-4">
         <h1 className="font-medium text-2xl">{busData?.name}</h1>
-        <p className="text-lg font-normal my-2">Route : Dhaka - Cox's Bazar</p>
+        <p className="text-lg font-normal my-2">Route : Dhaka - Cox Bazar</p>
         <p className="text-lg">Departure : {busData?.time}</p>
       </div>
       <hr />
@@ -110,20 +132,26 @@ const BusView = () => {
         <div>
           <div className="plane">
             <form
-              onSubmit={handleConfirmSubmit}
               className="grid md:grid-cols-2 gap-10"
+              onSubmit={handleConfirmSubmit}
             >
               <ol className="cabin fuselage">
                 <li className="">
                   <ol className="seats grid md:grid-cols-4 gap-2" type="A">
                     {!isLoading &&
                       allSeats.map((seatNumber) => (
-                        <li key={seatNumber}>
+                        <li
+                          key={seatNumber}
+                          className={`seat ${
+                            isSeatReserved(seatNumber) ? "reserved" : ""
+                          }`}
+                        >
                           <input
                             type="checkbox"
                             value={seatNumber}
                             id={seatNumber}
                             onChange={(e) => setSeatnumber(e.target.value)}
+                            disabled={isSeatReserved(seatNumber)}
                           />
                           <label htmlFor={seatNumber}>{seatNumber}</label>
                         </li>
@@ -183,21 +211,13 @@ const BusView = () => {
                 </div>
                 <div className="form-control mt-6">
                   <input
-                    // disabled={disabled}
                     className="btn btn-primary"
                     type="submit"
-                    value="Confirm Booking"
+                    value="Confirm"
                   />
                 </div>
               </div>
             </form>
-          </div>
-        </div>
-        <div>
-          <div className="">
-            <form></form>
-
-            <div></div>
           </div>
         </div>
       </div>
