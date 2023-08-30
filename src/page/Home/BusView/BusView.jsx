@@ -290,7 +290,7 @@ const BusView = () => {
                   <input
                     className="btn btn-primary"
                     type="submit"
-                    value="Confirm"
+                    value="Booking"
                   />
                 </div>
               </div>
