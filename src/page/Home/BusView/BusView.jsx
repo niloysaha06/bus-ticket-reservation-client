@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import "./BusView.css";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { FaMale } from "react-icons/fa";
+import { FaFemale } from "react-icons/fa";
 const BusView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [busData, setBusData] = useState({});
   const [seatNumber, setSeatnumber] = useState([]);
   const [ticketBookings, setTicketBookings] = useState([]);
-  const [ticketData, setTicketData] = useState([]);
+  // const [ticketData, setTicketData] = useState([]);
   const [reservedSeats, setReservedSeats] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const allSeats = [
@@ -59,11 +61,6 @@ const BusView = () => {
     "12A",
   ];
 
-  // console.log(seatNumber);
-  // console.log(ticketBookings);
-  // console.log(ticketData);
-  // console.log(reservedSeat);
-
   //form submit
   const handleConfirmSubmit = async (e) => {
     e.preventDefault();
@@ -95,19 +92,13 @@ const BusView = () => {
       const { data } = await axios.get(`http://localhost:3000/bus/${id}`);
       setBusData(data?.bus);
       setTicketBookings(data?.ticketBookings);
-      ticketBookings.map((ticket, index) => {
-        setTicketData(ticket);
-        setReservedSeats((reservedSeats[index] = ticket.seatNumber));
-      });
 
-      ticketBookings.forEach((ticket, index) => {
-        setTicketData(ticket);
-        setReservedSeats((prevReservedSeats) => {
-          const updatedReservedSeats = [...prevReservedSeats];
-          updatedReservedSeats[index] = ticket.seatNumber;
-          return updatedReservedSeats;
-        });
+      const updatedReservedSeats = [];
+
+      ticketBookings.map((ticket) => {
+        updatedReservedSeats.push(ticket.seatNumber);
       });
+      setReservedSeats(updatedReservedSeats);
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -120,11 +111,36 @@ const BusView = () => {
     getSingleBusData();
   }, [isLoading]);
 
+  const getGenderForSeat = (seatNumber) => {
+    const ticket = ticketBookings.find(
+      (ticket) => ticket.seatNumber === seatNumber
+    );
+
+    if (ticket) {
+      console.log(ticket);
+      if (ticket.gender === "Male") {
+        return (
+          <div className="badge">
+            M<FaMale />
+          </div>
+        );
+      } else {
+        return (
+          <div className="badge">
+            F<FaFemale />
+          </div>
+        );
+      }
+    } else {
+      return "";
+    }
+  };
+
   return (
     <div className="mt-12">
       <div className="text-center mb-4">
         <h1 className="font-medium text-2xl">{busData?.name}</h1>
-        <p className="text-lg font-normal my-2">Route : Dhaka - Cox Bazar</p>
+        <p className="text-lg font-normal my-2">{busData?.route}</p>
         <p className="text-lg">Departure : {busData?.time}</p>
       </div>
       <hr />
@@ -135,7 +151,10 @@ const BusView = () => {
               className="grid md:grid-cols-2 gap-10"
               onSubmit={handleConfirmSubmit}
             >
-              <ol className="cabin fuselage">
+              <ol
+                onChange={(e) => setSeatnumber(e.target.value)}
+                className="cabin fuselage"
+              >
                 <li className="">
                   <ol className="seats grid md:grid-cols-4 gap-2" type="A">
                     {!isLoading &&
@@ -150,16 +169,20 @@ const BusView = () => {
                             type="checkbox"
                             value={seatNumber}
                             id={seatNumber}
-                            onChange={(e) => setSeatnumber(e.target.value)}
                             disabled={isSeatReserved(seatNumber)}
                           />
-                          <label htmlFor={seatNumber}>{seatNumber}</label>
+                          <label htmlFor={seatNumber}>
+                            {seatNumber} {getGenderForSeat(seatNumber)}
+                          </label>
                         </li>
                       ))}
                   </ol>
                 </li>
               </ol>
               <div className="card-body">
+                <h1 className="font-medium text-xl">
+                  Seat Number : {seatNumber}
+                </h1>
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Name</span>
