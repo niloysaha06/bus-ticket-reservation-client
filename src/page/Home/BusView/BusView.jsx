@@ -94,6 +94,15 @@ const BusView = () => {
           seatNumber,
         });
         if (res) {
+          alert(`
+          Name: ${name},
+          Email: ${email},
+          Phone No.: ${phone},
+          SeatNumber: ${seatNumber}
+          
+          Confirm Booking?`);
+        }
+        if (res) {
           navigate("/thankyou");
         }
       } else {
