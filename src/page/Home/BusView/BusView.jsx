@@ -85,14 +85,17 @@ const BusView = () => {
         }
       }
       if (canBookSeat) {
-        const res = await axios.post("http://localhost:3000/book-ticket", {
-          busId,
-          name,
-          email,
-          phone,
-          gender,
-          seatNumber,
-        });
+        const res = await axios.post(
+          "https://busy-pink-sockeye-veil.cyclic.app/book-ticket",
+          {
+            busId,
+            name,
+            email,
+            phone,
+            gender,
+            seatNumber,
+          }
+        );
         if (res) {
           alert(`
           Name: ${name},
@@ -117,7 +120,9 @@ const BusView = () => {
 
   const getSingleBusData = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:3000/bus/${id}`);
+      const { data } = await axios.get(
+        `https://busy-pink-sockeye-veil.cyclic.app/bus/${id}`
+      );
       setBusData(data?.bus);
       setTicketBookings(data?.ticketBookings);
 
