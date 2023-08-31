@@ -7,7 +7,9 @@ const Home = () => {
 
   const getBusData = async () => {
     try {
-      const { data } = await axios.get("http://localhost:3000/buses");
+      const { data } = await axios.get(
+        "https://busy-pink-sockeye-veil.cyclic.app/buses"
+      );
       setBusesData(data);
     } catch (error) {
       console.log(error);
