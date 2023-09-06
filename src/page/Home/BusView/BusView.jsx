@@ -72,15 +72,21 @@ const BusView = () => {
     const gender = form.gender.value;
     const busId = busData._id;
     let canBookSeat = true;
+    let checkReservedSeatGender = "";
 
     try {
-      if (seatNumber !== "12A" && gender === "Male") {
+      if (seatNumber !== "12A") {
         const nextSeatNumber = getNextSeatNumber(seatNumber);
         if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
-          const checkReservedSeatGender =
+          checkReservedSeatGender =
             getGenderNameForReservedSeat(nextSeatNumber);
-          if (checkReservedSeatGender && checkReservedSeatGender === "Female") {
-            canBookSeat = false;
+          if (checkReservedSeatGender) {
+            if (
+              (gender === "Male" && checkReservedSeatGender === "Female") ||
+              (gender === "Female" && checkReservedSeatGender === "Male")
+            ) {
+              canBookSeat = false;
+            }
           }
         }
       }
@@ -110,7 +116,7 @@ const BusView = () => {
         }
       } else {
         alert(
-          `You cannot reserve this seat ${seatNumber}. Because that seat is reserved by a Female`
+          `You cannot reserve this seat ${seatNumber}. Because that seat is reserved by a ${checkReservedSeatGender}`
         );
       }
     } catch (error) {
