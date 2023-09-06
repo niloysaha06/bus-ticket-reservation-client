@@ -61,6 +61,8 @@ const BusView = () => {
     "11D",
     "12A",
   ];
+  const [isFemale, setIsFemale] = useState(false);
+  const [isMale, setIsMale] = useState(false);
 
   //form submit
   const handleConfirmSubmit = async (e) => {
@@ -192,21 +194,38 @@ const BusView = () => {
 
     if (ticket) {
       console.log(ticket);
-      if (ticket.gender === "Male") {
+      if (ticket.gender === "Male" && isMale) {
         return (
           <div className="badge">
             M<FaMale />
           </div>
         );
-      } else {
+      } else if (ticket.gender === "Female" && isFemale) {
         return (
           <div className="badge">
             F<FaFemale />
           </div>
         );
+      } else {
+        return "";
       }
     } else {
       return "";
+    }
+  };
+
+  const handleGender = (e) => {
+    const gender = e.target.value;
+    console.log(gender);
+    if (gender === "Male") {
+      setIsMale(true);
+      setIsFemale(false);
+    } else if (gender === "Female") {
+      setIsMale(false);
+      setIsFemale(true);
+    } else {
+      setIsMale(false);
+      setIsFemale(false);
     }
   };
 
@@ -221,6 +240,20 @@ const BusView = () => {
       <div>
         <div>
           <div className="plane">
+            <div className="form-control mb-5">
+              <select
+                onChange={handleGender}
+                className="select select-bordered w-40"
+                name="gender"
+              >
+                <option disabled selected>
+                  Select Gerder
+                </option>
+                <option value={"Male"}>Male</option>
+                <option value={"Female"}>Female</option>
+              </select>
+            </div>
+
             <form
               className="grid md:grid-cols-2 gap-10"
               onSubmit={handleConfirmSubmit}
@@ -245,6 +278,7 @@ const BusView = () => {
                             id={seatNumber}
                             disabled={isSeatReserved(seatNumber)}
                           />
+
                           <label htmlFor={seatNumber}>
                             {seatNumber} {getGenderForSeat(seatNumber)}
                           </label>
