@@ -82,8 +82,7 @@ const CountDownTimer = ({ id, dtime }) => {
       ) : (
         showTimer && (
           <h1 style={{ color: "#dc2626" }} className="mt-5">
-            Departure time until {dtime} : {hours} hours, {minutes} minutes,{" "}
-            {seconds} seconds
+            Time Left : {hours} hours, {minutes} minutes, {seconds} seconds
           </h1>
         )
       )}

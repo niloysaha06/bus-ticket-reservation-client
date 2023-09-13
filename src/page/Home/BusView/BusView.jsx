@@ -235,6 +235,7 @@ const BusView = () => {
       <div className="text-center mb-4">
         <h1 className="font-medium text-2xl">{busData?.name}</h1>
         <p className="text-lg font-normal my-2">{busData?.route}</p>
+        <p className="text-lg font-normal my-2">Departure : {busData?.time}</p>
         {!isLoading && (
           <CountDownTimer id={busData?._id} dtime={busData?.time} />
         )}
