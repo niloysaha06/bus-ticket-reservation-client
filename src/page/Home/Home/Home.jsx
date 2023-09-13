@@ -19,7 +19,7 @@ const Home = () => {
   useEffect(() => {
     getBusData();
   }, []);
-  console.log(busesData);
+  // console.log(busesData);
 
   return (
     <div className="mt-16">
