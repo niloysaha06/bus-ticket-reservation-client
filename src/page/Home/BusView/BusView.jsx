@@ -4,6 +4,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaMale } from "react-icons/fa";
 import { FaFemale } from "react-icons/fa";
+import CountDownTimer from "../../../components/CountDownTimer/CountDownTimer";
+import Timer from "../../../components/Timer/Timer";
+import DepartureTimer from "../../../components/Timer/Timer";
 
 const BusView = () => {
   const { id } = useParams();
@@ -193,7 +196,7 @@ const BusView = () => {
     );
 
     if (ticket) {
-      console.log(ticket);
+      // console.log(ticket);
       if (ticket.gender === "Male" && isMale) {
         return (
           <div className="badge">
@@ -235,6 +238,10 @@ const BusView = () => {
         <h1 className="font-medium text-2xl">{busData?.name}</h1>
         <p className="text-lg font-normal my-2">{busData?.route}</p>
         <p className="text-lg">Departure : {busData?.time}</p>
+        {!isLoading && (
+          // <DepartureTimer departureTimeStr={busData?.time} />
+          <CountDownTimer id={busData?._id} dtime={busData?.time} />
+        )}
       </div>
       <hr />
       <div>
