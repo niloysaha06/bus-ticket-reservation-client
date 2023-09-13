@@ -5,8 +5,6 @@ import axios from "axios";
 import { FaMale } from "react-icons/fa";
 import { FaFemale } from "react-icons/fa";
 import CountDownTimer from "../../../components/CountDownTimer/CountDownTimer";
-import Timer from "../../../components/Timer/Timer";
-import DepartureTimer from "../../../components/Timer/Timer";
 
 const BusView = () => {
   const { id } = useParams();
@@ -237,9 +235,7 @@ const BusView = () => {
       <div className="text-center mb-4">
         <h1 className="font-medium text-2xl">{busData?.name}</h1>
         <p className="text-lg font-normal my-2">{busData?.route}</p>
-        <p className="text-lg">Departure : {busData?.time}</p>
         {!isLoading && (
-          // <DepartureTimer departureTimeStr={busData?.time} />
           <CountDownTimer id={busData?._id} dtime={busData?.time} />
         )}
       </div>
