@@ -1,12 +1,14 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CountDownTimer = ({ id, dtime }) => {
+  const navigate = useNavigate();
   const [countdown, setCountdown] = useState(null);
   const [showTimer, setShowTimer] = useState(false);
 
   function getPeriod(timeString) {
-    return timeString.slice(-2).trim(); // Extracts the last two characters (AM or PM) and removes any leading/trailing spaces
+    return timeString.slice(-2).trim();
   }
   const convertTimeTo24HourFormat = (timeString) => {
     let [hour, minutes] = timeString.split(":");
@@ -26,7 +28,8 @@ const CountDownTimer = ({ id, dtime }) => {
         `https://busy-pink-sockeye-veil.cyclic.app/reset-bus/${id}`
       );
       if (res.status === 200) {
-        return true;
+        // navigate("/");
+        window.location.reload();
       }
     } catch (error) {
       console.log(error);
@@ -37,32 +40,35 @@ const CountDownTimer = ({ id, dtime }) => {
   useEffect(() => {
     const targetTime = new Date();
     const abc = convertTimeTo24HourFormat(dtime);
-    console.log(abc);
-    targetTime.setHours(abc[0], abc[1], abc[2], abc[3]); // Set the target time
-    console.log("targetTime", targetTime);
+    targetTime.setHours(abc[0], abc[1], abc[2], abc[3]);
+    const presentTime = new Date();
 
-    const countdownInterval = setInterval(() => {
-      const currentTime = new Date();
-      const timeDifference = targetTime - currentTime;
-      if (timeDifference <= 7200000 && timeDifference > 0) {
-        setShowTimer(true);
-      } else {
-        setShowTimer(false);
-      }
-      if (timeDifference <= 0) {
-        targetTime.setDate(targetTime.getDate() + 1);
-        targetTime.setHours(abc[0], abc[1], abc[2], abc[3]);
-        setCountdown(timeDifference);
-        const resetBustTicket = resetSingleBusTicket();
-        console.log(resetBustTicket);
-      } else {
-        setCountdown(timeDifference);
-      }
-    }, 1000);
+    if (targetTime > presentTime) {
+      const countdownInterval = setInterval(() => {
+        const currentTime = new Date();
+        let timeDifference = targetTime - currentTime;
+        if (timeDifference <= 7200000 && timeDifference > 0) {
+          setShowTimer(true);
+        } else {
+          setShowTimer(false);
+        }
+        if (timeDifference <= 0) {
+          targetTime.setDate(targetTime.getDate() + 1);
+          targetTime.setHours(abc[0], abc[1], abc[2], abc[3]);
+          setCountdown(timeDifference);
+          const resetBustTicket = resetSingleBusTicket();
+          console.log(resetBustTicket);
+        } else {
+          setCountdown(timeDifference);
+        }
+      }, 1000);
 
-    return () => {
-      clearInterval(countdownInterval);
-    };
+      return () => {
+        clearInterval(countdownInterval);
+      };
+    } else {
+      setCountdown(false);
+    }
   }, [dtime, id]);
 
   const hours = Math.floor(countdown / 3600000);
@@ -75,9 +81,9 @@ const CountDownTimer = ({ id, dtime }) => {
         <p>Loading...</p>
       ) : (
         showTimer && (
-          <h1 className="mt-5">
-            Time until {dtime} : {hours} hours, {minutes} minutes, {seconds}{" "}
-            seconds
+          <h1 style={{ color: "#dc2626" }} className="mt-5">
+            Departure time until {dtime} : {hours} hours, {minutes} minutes,{" "}
+            {seconds} seconds
           </h1>
         )
       )}

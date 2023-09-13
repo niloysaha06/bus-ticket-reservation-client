@@ -7,7 +7,7 @@ const BusCart = ({ item }) => {
       <div className="card-body">
         <h2 className="card-title">{name}</h2>
         <p>{route}</p>
-        <p className="">{time}</p>
+        <p className="">Departure : {time}</p>
         <Link to={`/busview/${_id}`}>
           <div className="card-actions justify-end">
             <button className="btn btn-primary">View</button>
