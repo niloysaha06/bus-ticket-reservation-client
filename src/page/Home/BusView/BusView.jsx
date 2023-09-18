@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaMale } from "react-icons/fa";
 import { FaFemale } from "react-icons/fa";
-import CountDownTimer from "../../../components/CountDownTimer/CountDownTimer";
+import CountDownTimer from "../../../components/Timer/CountDownTimer";
 
 const BusView = () => {
   const { id } = useParams();
@@ -12,7 +12,6 @@ const BusView = () => {
   const [busData, setBusData] = useState({});
   const [seatNumber, setSeatnumber] = useState([]);
   const [ticketBookings, setTicketBookings] = useState([]);
-  // const [ticketData, setTicketData] = useState([]);
   const [reservedSeats, setReservedSeats] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const allSeats = [
@@ -64,6 +63,7 @@ const BusView = () => {
   ];
   const [isFemale, setIsFemale] = useState(false);
   const [isMale, setIsMale] = useState(false);
+  const [displayString, setDisplayString] = useState("");
 
   //form submit
   const handleConfirmSubmit = async (e) => {
@@ -76,26 +76,34 @@ const BusView = () => {
     const busId = busData._id;
     let canBookSeat = true;
     let checkReservedSeatGender = "";
+    let newArr = [];
 
     try {
-      if (seatNumber !== "12A") {
-        const nextSeatNumber = getNextSeatNumber(seatNumber);
-        if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
-          checkReservedSeatGender =
-            getGenderNameForReservedSeat(nextSeatNumber);
-          if (checkReservedSeatGender) {
-            if (
-              (gender === "Male" && checkReservedSeatGender === "Female") ||
-              (gender === "Female" && checkReservedSeatGender === "Male")
-            ) {
-              canBookSeat = false;
+      seatNumber.forEach(function (value, index) {
+        if (value !== "12A") {
+          const nextSeatNumber = getNextSeatNumber(value);
+          if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
+            checkReservedSeatGender =
+              getGenderNameForReservedSeat(nextSeatNumber);
+            if (checkReservedSeatGender) {
+              if (
+                (gender === "Male" && checkReservedSeatGender === "Female") ||
+                (gender === "Female" && checkReservedSeatGender === "Male")
+              ) {
+                newArr.push(value);
+              }
             }
           }
         }
+      });
+
+      if (newArr.length > 0) {
+        canBookSeat = false;
       }
+
       if (canBookSeat) {
         const res = await axios.post(
-          "https://busy-pink-sockeye-veil.cyclic.app/book-ticket",
+          "http://busy-pink-sockeye-veil.cyclic.app/book-ticket",
           {
             busId,
             name,
@@ -110,7 +118,7 @@ const BusView = () => {
           Name: ${name},
           Email: ${email},
           Phone No.: ${phone},
-          SeatNumber: ${seatNumber}
+          SeatNumber: ${seatNumber.join(", ")}
           
           Confirm Booking?`);
         }
@@ -119,7 +127,9 @@ const BusView = () => {
         }
       } else {
         alert(
-          `You cannot reserve this seat ${seatNumber}. Because that seat is reserved by a ${checkReservedSeatGender}`
+          `You cannot reserve this seat ${newArr.join(
+            ", "
+          )}. Because the next seat is reserved by a ${checkReservedSeatGender}`
         );
       }
     } catch (error) {
@@ -217,7 +227,6 @@ const BusView = () => {
 
   const handleGender = (e) => {
     const gender = e.target.value;
-    console.log(gender);
     if (gender === "Male") {
       setIsMale(true);
       setIsFemale(false);
@@ -228,6 +237,20 @@ const BusView = () => {
       setIsMale(false);
       setIsFemale(false);
     }
+  };
+
+  const handleSeatNumbers = (seat) => {
+    setSeatnumber((prevSeatNumber) => {
+      let seatArr = [...prevSeatNumber];
+
+      if (!seatArr.includes(seat)) {
+        seatArr.push(seat);
+      } else {
+        seatArr = seatArr.filter((item) => item !== seat);
+      }
+      setDisplayString(seatArr.join(", "));
+      return seatArr;
+    });
   };
 
   return (
@@ -251,7 +274,7 @@ const BusView = () => {
                 name="gender"
               >
                 <option disabled selected>
-                  Select Gerder
+                  Select Gender
                 </option>
                 <option value={"Male"}>Male</option>
                 <option value={"Female"}>Female</option>
@@ -263,7 +286,7 @@ const BusView = () => {
               onSubmit={handleConfirmSubmit}
             >
               <ol
-                onChange={(e) => setSeatnumber(e.target.value)}
+                onChange={(e) => handleSeatNumbers(e.target.value)}
                 className="cabin fuselage"
               >
                 <li className="">
@@ -293,7 +316,7 @@ const BusView = () => {
               </ol>
               <div className="card-body">
                 <h1 className="font-medium text-xl">
-                  Seat Number : {seatNumber}
+                  Seat Number : {displayString}
                 </h1>
                 <div className="form-control">
                   <label className="label">
