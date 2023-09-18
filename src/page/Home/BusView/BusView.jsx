@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./BusView.css";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaMale } from "react-icons/fa";
 import { FaFemale } from "react-icons/fa";
 import CountDownTimer from "../../../components/Timer/CountDownTimer";
+import {
+  handleBookingConfirmation,
+  checkAndRemoveExpiredBookings,
+} from "../../../helpers/handleLocalStorage.js";
 
 const BusView = () => {
   const { id } = useParams();
+  const checkInputRef = useRef();
   const navigate = useNavigate();
   const [busData, setBusData] = useState({});
   const [seatNumber, setSeatnumber] = useState([]);
@@ -64,6 +69,9 @@ const BusView = () => {
   const [isFemale, setIsFemale] = useState(false);
   const [isMale, setIsMale] = useState(false);
   const [displayString, setDisplayString] = useState("");
+  const [checkTenMins, setCheckTenMins] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [userInfo, setUserInfo] = useState({ name: "", email: "", phone: "" });
 
   //form submit
   const handleConfirmSubmit = async (e) => {
@@ -79,7 +87,7 @@ const BusView = () => {
     let newArr = [];
 
     try {
-      seatNumber.forEach(function (value) {
+      seatNumber.forEach(function (value, index) {
         if (value !== "12A") {
           const nextSeatNumber = getNextSeatNumber(value);
           if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
@@ -103,7 +111,7 @@ const BusView = () => {
 
       if (canBookSeat) {
         const res = await axios.post(
-          "http://busy-pink-sockeye-veil.cyclic.app/book-ticket",
+          "https://busy-pink-sockeye-veil.cyclic.app/book-ticket",
           {
             busId,
             name,
@@ -111,9 +119,10 @@ const BusView = () => {
             phone,
             gender,
             seatNumber,
+            userId,
           }
         );
-        if (res) {
+        if (res.status === 200) {
           alert(`
           Name: ${name},
           Email: ${email},
@@ -121,8 +130,9 @@ const BusView = () => {
           SeatNumber: ${seatNumber.join(", ")}
           
           Confirm Booking?`);
-        }
-        if (res) {
+
+          handleBookingConfirmation(res.data.userId, seatNumber, id);
+
           navigate("/thankyou");
         }
       } else {
@@ -158,6 +168,29 @@ const BusView = () => {
   };
 
   const isSeatReserved = (seatNumber) => reservedSeats.includes(seatNumber);
+
+  const disableCheckBoxCheck = (seatNumber) => {
+    const checkReservedSeatNumber = reservedSeats.includes(seatNumber);
+    const currentElement = checkInputRef[seatNumber];
+    if (
+      checkReservedSeatNumber &&
+      checkTenMins &&
+      checkTheCurrentUserSeatNumber(seatNumber)
+    ) {
+      setReservedSeats((seat) => {
+        let newArr = [...seat];
+        newArr = newArr.filter((item) => item !== seatNumber);
+        return newArr;
+      });
+      currentElement.checked = true;
+      return false;
+    }
+    return checkReservedSeatNumber;
+  };
+
+  const checkTheCurrentUserSeatNumber = (seat) => {
+    return seatNumber.includes(seat);
+  };
   const getGenderNameForReservedSeat = (seatNumber) => {
     const ticket = ticketBookings.find(
       (ticket) => ticket.seatNumber === seatNumber
@@ -196,6 +229,27 @@ const BusView = () => {
 
   useEffect(() => {
     getSingleBusData();
+    checkAndRemoveExpiredBookings(
+      setSeatnumber,
+      setCheckTenMins,
+      setDisplayString,
+      setUserId,
+      id,
+      setUserInfo
+    );
+
+    const interval = setInterval(() => {
+      checkAndRemoveExpiredBookings(
+        setSeatnumber,
+        setCheckTenMins,
+        setDisplayString,
+        setUserId,
+        id,
+        setUserInfo
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, [isLoading]);
 
   const getGenderForSeat = (seatNumber) => {
@@ -204,7 +258,6 @@ const BusView = () => {
     );
 
     if (ticket) {
-      // console.log(ticket);
       if (ticket.gender === "Male" && isMale) {
         return (
           <div className="badge">
@@ -250,6 +303,14 @@ const BusView = () => {
       }
       setDisplayString(seatArr.join(", "));
       return seatArr;
+    });
+  };
+
+  const handleChange = (e) => {
+    // Update userInfo state when input fields change
+    setUserInfo({
+      ...userInfo,
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -303,7 +364,11 @@ const BusView = () => {
                             type="checkbox"
                             value={seatNumber}
                             id={seatNumber}
-                            disabled={isSeatReserved(seatNumber)}
+                            ref={(input) => (checkInputRef[seatNumber] = input)}
+                            disabled={disableCheckBoxCheck(
+                              seatNumber,
+                              checkInputRef[seatNumber]
+                            )}
                           />
 
                           <label htmlFor={seatNumber}>
@@ -327,6 +392,8 @@ const BusView = () => {
                     name="name"
                     placeholder="name"
                     className="input input-bordered"
+                    value={userInfo.name}
+                    onChange={handleChange}
                   />
                 </div>
                 <div className="form-control">
@@ -338,6 +405,8 @@ const BusView = () => {
                     name="email"
                     placeholder="email"
                     className="input input-bordered"
+                    value={userInfo.email}
+                    onChange={handleChange}
                   />
                 </div>
                 <div className="form-control">
@@ -349,6 +418,8 @@ const BusView = () => {
                     name="phone"
                     placeholder="phone"
                     className="input input-bordered"
+                    value={userInfo.phone}
+                    onChange={handleChange}
                   />
                 </div>
 
