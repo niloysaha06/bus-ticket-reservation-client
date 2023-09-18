@@ -12,6 +12,7 @@ const CountDownTimer = ({ id, dtime }) => {
   }
   const convertTimeTo24HourFormat = (timeString) => {
     let [hour, minutes] = timeString.split(":");
+    console.log(hour, minutes);
     let period = getPeriod(timeString);
     hour = parseInt(hour, 10);
 
@@ -42,6 +43,8 @@ const CountDownTimer = ({ id, dtime }) => {
     const abc = convertTimeTo24HourFormat(dtime);
     targetTime.setHours(abc[0], abc[1], abc[2], abc[3]);
     const presentTime = new Date();
+    console.log(targetTime);
+    console.log(presentTime);
 
     if (targetTime > presentTime) {
       const countdownInterval = setInterval(() => {
