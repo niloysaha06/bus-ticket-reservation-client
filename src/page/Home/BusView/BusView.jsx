@@ -79,7 +79,7 @@ const BusView = () => {
     let newArr = [];
 
     try {
-      seatNumber.forEach(function (value, index) {
+      seatNumber.forEach(function (value) {
         if (value !== "12A") {
           const nextSeatNumber = getNextSeatNumber(value);
           if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
