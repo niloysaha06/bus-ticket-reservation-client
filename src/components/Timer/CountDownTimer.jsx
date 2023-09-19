@@ -18,6 +18,8 @@ const CountDownTimer = ({ id, dtime }) => {
 
     if (period === "PM" && hour !== 12) {
       hour += 12;
+    } else if (period === "AM" && hour === 12) {
+      hour = 0;
     }
 
     return [hour, parseInt(minutes, 10), 0, 0];
