@@ -5,10 +5,6 @@ import axios from "axios";
 import { FaMale } from "react-icons/fa";
 import { FaFemale } from "react-icons/fa";
 import CountDownTimer from "../../../components/Timer/CountDownTimer";
-import {
-  handleBookingConfirmation,
-  checkAndRemoveExpiredBookings,
-} from "../../../helpers/handleLocalStorage.js";
 
 const BusView = () => {
   const { id } = useParams();
@@ -87,7 +83,7 @@ const BusView = () => {
     let newArr = [];
 
     try {
-      seatNumber.forEach(function (value, index) {
+      seatNumber.forEach(function (value) {
         if (value !== "12A") {
           const nextSeatNumber = getNextSeatNumber(value);
           if (nextSeatNumber && isSeatReserved(nextSeatNumber)) {
@@ -131,7 +127,7 @@ const BusView = () => {
           
           Confirm Booking?`);
 
-          handleBookingConfirmation(res.data.userId, seatNumber, id);
+          handleBookingConfirmation(res.data.userId, id);
 
           navigate("/thankyou");
         }
@@ -167,19 +163,19 @@ const BusView = () => {
     }
   };
 
-  const isSeatReserved = (seatNumber) => reservedSeats.includes(seatNumber);
+  const isSeatReserved = (sNumber) => reservedSeats.includes(sNumber);
 
-  const disableCheckBoxCheck = (seatNumber) => {
-    const checkReservedSeatNumber = reservedSeats.includes(seatNumber);
-    const currentElement = checkInputRef[seatNumber];
+  const disableCheckBoxCheck = (sNumber) => {
+    const checkReservedSeatNumber = reservedSeats.includes(sNumber);
+    const currentElement = checkInputRef[sNumber];
     if (
       checkReservedSeatNumber &&
       checkTenMins &&
-      checkTheCurrentUserSeatNumber(seatNumber)
+      checkTheCurrentUserSeatNumber(sNumber)
     ) {
       setReservedSeats((seat) => {
         let newArr = [...seat];
-        newArr = newArr.filter((item) => item !== seatNumber);
+        newArr = newArr.filter((item) => item !== sNumber);
         return newArr;
       });
       currentElement.checked = true;
@@ -191,9 +187,9 @@ const BusView = () => {
   const checkTheCurrentUserSeatNumber = (seat) => {
     return seatNumber.includes(seat);
   };
-  const getGenderNameForReservedSeat = (seatNumber) => {
+  const getGenderNameForReservedSeat = (sNumber) => {
     const ticket = ticketBookings.find(
-      (ticket) => ticket.seatNumber === seatNumber
+      (ticket) => ticket.seatNumber === sNumber
     );
     if (ticket) {
       return ticket.gender;
@@ -229,27 +225,16 @@ const BusView = () => {
 
   useEffect(() => {
     getSingleBusData();
-    checkAndRemoveExpiredBookings(
-      setSeatnumber,
-      setCheckTenMins,
-      setDisplayString,
-      setUserId,
-      id,
-      setUserInfo
-    );
 
-    const interval = setInterval(() => {
-      checkAndRemoveExpiredBookings(
-        setSeatnumber,
-        setCheckTenMins,
-        setDisplayString,
-        setUserId,
-        id,
-        setUserInfo
-      );
-    }, 60000);
+    if (!isLoading) {
+      checkAndRemoveExpiredBookings(id);
 
-    return () => clearInterval(interval);
+      const interval = setInterval(() => {
+        checkAndRemoveExpiredBookings(id);
+      }, 60000);
+
+      return () => clearInterval(interval);
+    }
   }, [isLoading]);
 
   const getGenderForSeat = (seatNumber) => {
@@ -311,6 +296,70 @@ const BusView = () => {
     setUserInfo({
       ...userInfo,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const checkAndRemoveExpiredBookings = (busId) => {
+    setCheckTenMins(false);
+    setSeatnumber([]);
+    setDisplayString("");
+    setUserId(null);
+
+    const currentTime = new Date().getTime();
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("booking_")) {
+        const bookingInfo = JSON.parse(localStorage.getItem(key));
+        const bookingTime = bookingInfo.timestamp;
+        const expirationTime = bookingTime + 10 * 60 * 1000; // 10 minutes
+        if (bookingInfo.busId === busId) {
+          if (currentTime >= expirationTime) {
+            localStorage.removeItem(key);
+            setCheckTenMins(false);
+            setSeatnumber([]);
+            setDisplayString("");
+            setUserId(null);
+          } else {
+            const storedSeatNumbers = bookingInfo.seatNumber;
+            setSeatnumber(storedSeatNumbers);
+            setCheckTenMins(true);
+            setDisplayString(storedSeatNumbers.join(", "));
+            setUserId(bookingInfo.userid);
+            getUserInfo(bookingInfo.userid, setUserInfo);
+          }
+        }
+      }
+    }
+  };
+
+  const handleBookingConfirmation = (userid, busId) => {
+    const bookingInfo = {
+      userid: userid,
+      seatNumber: seatNumber,
+      busId: busId,
+      timestamp: new Date().getTime(),
+    };
+    const bookingKey = `booking_${new Date().getTime()}`; // Unique key for each booking
+    removePreviousStorage(busId);
+    localStorage.setItem(bookingKey, JSON.stringify(bookingInfo));
+  };
+
+  const removePreviousStorage = (busId) => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("booking_")) {
+        const bookingInfo = JSON.parse(localStorage.getItem(key));
+        if (bookingInfo.busId === busId) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
+  };
+
+  const getUserInfo = async (userid, setUserInfo) => {
+    const url = `https://busy-pink-sockeye-veil.cyclic.app/get-single-user/${userid}`;
+    const response = axios.get(url).then((response) => {
+      setUserInfo(response.data.data);
     });
   };
 

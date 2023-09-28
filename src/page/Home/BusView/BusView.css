@@ -1,3 +1,21 @@
+.bus-view-container {
+    padding: 10px;
+  }
+  
+  .text-center {
+    text-align: center;
+  }
+  
+  /* Adjust styles for smaller screens */
+  @media (max-width: 768px) {
+    .bus-view-container {
+      padding: 5px;
+    }
+    
+    .text-center {
+      font-size: 18px; /* Adjust font size for headings */
+    } }
+
 .plane {
     margin: 50px 0px;
 }
